@@ -10,43 +10,42 @@ import UIKit
 
 
 class CustomView: UIView {
-    var retriever:CustomViewProtocol?
+    var retriever:CustomViewDelegate?
     var ID:Int?
     var tapGesture:UITapGestureRecognizer?
     
     
-    override func draw(_ rect: CGRect) {
- 
-    }
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = generateColor()
-        tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.tapped))
-        tapGesture?.numberOfTapsRequired = 1
-        tapGesture?.numberOfTouchesRequired = 1
-        tapGesture?.delegate = self
-        self.addGestureRecognizer(tapGesture!)
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.viewTapped))
+        initOneTapViewGesture(gesture: tapGesture)
         self.isUserInteractionEnabled = true
         
     }
 
+    
+    func initOneTapViewGesture(gesture:UITapGestureRecognizer?){
+        gesture?.numberOfTapsRequired = 1
+        gesture?.numberOfTouchesRequired = 1
+        self.addGestureRecognizer(tapGesture!)
+    }
+    
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
 	
         if self.point(inside: point, with: event) {
             return super.hitTest(point, with: event)
         }
-        guard isUserInteractionEnabled, !isHidden, alpha > 0 else {
-            return nil
-        }
         
-        for subview in subviews.reversed() {
-            let convertedPoint = subview.convert(point, from: self)
-            if let hitView = subview.hitTest(convertedPoint, with: event) {
+        if !subviews.isEmpty{
+            let convertedPoint = subviews[0].convert(point, from: self)
+            if let hitView = subviews[0].hitTest(convertedPoint, with: event) {
                 return hitView
             }
         }
+        print("tap is gone")
         return nil
+        
     }
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
@@ -56,7 +55,7 @@ class CustomView: UIView {
         self.ID = id
     }
     
-    @objc func tapped(sender: UITapGestureRecognizer){
+    @objc func viewTapped(sender: UITapGestureRecognizer){
 
         print("GESTURA VIZVANA")
         if let id = self.ID{
@@ -64,14 +63,6 @@ class CustomView: UIView {
         }
     }
     
-    func convertFrameToReal(view:UIView,frame:CGRect) ->CGRect{
-        if view.superview == nil{
-            return frame
-        }else{
-            return convertFrameToReal(view: view.superview!, frame: frame + view.convert(view.frame, to: view.superview))
-        }
-        
-    }
     
     func generateColor() -> UIColor{
         let red = CGFloat(Float(arc4random()) / Float(UINT32_MAX))
@@ -81,23 +72,5 @@ class CustomView: UIView {
     }
     
 }
-extension CGRect{
-    static func + (lRect:CGRect,rRect:CGRect) -> CGRect{
-        let x = lRect.minX + rRect.minX
-        let y = lRect.minY + rRect.minY
-//        let height = lRect.height + rRect.height
-//        let width = lRect.width + rRect.width
-        return CGRect(x: x, y: y, width: lRect.width, height: lRect.height)
-    }
-}
-extension CustomView: UIGestureRecognizerDelegate{
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UIPress) -> Bool {
-        return !self.isDescendant(of: self.superview!)
-        
-    }
-    
-}
-
 
 

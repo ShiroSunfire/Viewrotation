@@ -8,19 +8,21 @@
 
 import UIKit
 
-protocol  CustomViewProtocol {
+protocol  CustomViewDelegate {
     func recieveTap(ID:Int)
 }
 
-class ViewController: UIViewController, CustomViewProtocol {
+class ViewController: UIViewController, CustomViewDelegate {
 
   
     @IBOutlet weak var recievingAmountOfViewsTextField: UITextField!
     
     @IBOutlet weak var mainView: UIView!
+    
     let OFFSET = 10.0
     let WIDTH = 80.0
     let HEIGHT = 120.0
+    
     var maxAmountOfViews:Int?
     
     public var screenWidth: CGFloat {
@@ -34,42 +36,53 @@ class ViewController: UIViewController, CustomViewProtocol {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        calculateMaxAmountOfViews()
+    }
+    
+    func calculateMaxAmountOfViews(){
         let maxWidthAmount = (Double(screenWidth) - WIDTH) / 10.0
         let maxHeightAmount = (Double(screenHeight) - HEIGHT) / 10.0
         maxAmountOfViews = Int(maxWidthAmount < maxHeightAmount ? maxWidthAmount : maxHeightAmount)
-        
     }
     
     @IBAction func proccesViewsAmountTextField(_ sender: UIButton) {
         cleanMainView()
         
-        if let count = Int(recievingAmountOfViewsTextField.text!){
-            if count > maxAmountOfViews!{
+        if let amountOfViews = Int(recievingAmountOfViewsTextField.text!){
+            if amountOfViews > maxAmountOfViews!{
               callAlert()
             }else{
-                 generateViewsToMainView(count: count, x: 0.0, y: 0.0, widht: WIDTH, height: HEIGHT, lastView: mainView)
+                 generateViewsToMainView(viewsAmount: amountOfViews, x: 0.0, y: 0.0, widht: WIDTH, height: HEIGHT, toView: mainView)
             }
+        }else{
+            callAlert()
         }
-        mainView.layoutIfNeeded()
     }
     
+
 
     func callAlert()
     {
         var textField = UITextField()
-        let alert = UIAlertController(title: "Incorrect amount", message: "", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Incorrect amount", message: "Max amount is \(maxAmountOfViews!)", preferredStyle: .alert)
       
         let submitButton = UIAlertAction(title: "submit", style: .default) { (action) in
             if textField.text != nil && Int(textField.text!) != nil && Int(textField.text!)! <= self.maxAmountOfViews!{
-                let count = Int(textField.text!)
-                self.generateViewsToMainView(count: count!, x: 0.0, y: 0.0, widht: self.WIDTH, height: self.HEIGHT, lastView: self.mainView)
+                let viewsAmount = Int(textField.text!)
+                self.generateViewsToMainView( viewsAmount:  viewsAmount!, x: 0.0, y: 0.0, widht: self.WIDTH, height: self.HEIGHT, toView: self.mainView)
+            }else{
+            self.callAlert()
             }
         }
+        
         alert.addTextField { (alertTextField) in
             textField = alertTextField
         }
+        
         alert.addAction(submitButton)
+        
         self.recievingAmountOfViewsTextField.text = ""
+        
         present(alert,animated: true,completion:  nil)
         
     }
@@ -82,10 +95,12 @@ class ViewController: UIViewController, CustomViewProtocol {
     func deleteViewById(view:CustomView,ID:Int){
         if view.ID! == ID{
             if !view.subviews.isEmpty{
-                if view.superview != mainView{
-                    let temp = view.subviews[0] as! CustomView
-                    view.superview?.insertSubview(temp, aboveSubview: view.superview!)
+                let temp = view.subviews[0] as! CustomView
+                if view.superview == mainView{
+                    temp.frame = CGRect(x: 0.0, y: 0.0, width: temp.frame.width, height: temp.frame.height)
                 }
+                view.superview?.insertSubview(temp, aboveSubview: view.superview!)
+                
             }
             view.removeFromSuperview()
         }else{
@@ -94,16 +109,15 @@ class ViewController: UIViewController, CustomViewProtocol {
     }
     
     
-    func generateViewsToMainView(count: Int,x:Double,y:Double,widht:Double,height:Double,lastView:UIView){
-        var counter: Int = count
-        if counter == 0 {
-        } else if counter > 0{
-            counter -= 1
+    func generateViewsToMainView(viewsAmount: Int,x:Double,y:Double,widht:Double,height:Double,toView:UIView){
+        if viewsAmount == 0 {
+        } else if viewsAmount > 0{
+   
             let currView = CustomView(frame: CGRect(x: x, y:y, width:widht, height: height))
-            currView.setId(id: count)
-            lastView.insertSubview(currView, aboveSubview: lastView)
+            currView.setId(id: viewsAmount - 1)
+            toView.insertSubview(currView, aboveSubview: toView)
             currView.retriever = self
-            generateViewsToMainView(count: counter, x: OFFSET , y: OFFSET, widht: widht, height: height, lastView:currView)
+            generateViewsToMainView( viewsAmount: viewsAmount - 1, x: OFFSET , y: OFFSET, widht: widht, height: height, toView:currView)
         }
     }
     
