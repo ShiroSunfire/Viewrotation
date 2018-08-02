@@ -21,28 +21,63 @@ class ViewController: UIViewController, CustomViewProtocol {
     let OFFSET = 10.0
     let WIDTH = 80.0
     let HEIGHT = 120.0
+    var maxAmountOfViews:Int?
+    
+    public var screenWidth: CGFloat {
+        return UIScreen.main.bounds.width
+    }
+    
+    public var screenHeight: CGFloat {
+        return UIScreen.main.bounds.height
+    }
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        let maxWidthAmount = (Double(screenWidth) - WIDTH) / 10.0
+        let maxHeightAmount = (Double(screenHeight) - HEIGHT) / 10.0
+        maxAmountOfViews = Int(maxWidthAmount < maxHeightAmount ? maxWidthAmount : maxHeightAmount)
+        
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
     
     @IBAction func proccesViewsAmountTextField(_ sender: UIButton) {
         cleanMainView()
+        
         if let count = Int(recievingAmountOfViewsTextField.text!){
-            generateViewsToMainView(count: count, x: 0.0, y: 0.0, widht: WIDTH, height: HEIGHT, lastView: mainView)
+            if count > maxAmountOfViews!{
+              callAlert()
+            }else{
+                 generateViewsToMainView(count: count, x: 0.0, y: 0.0, widht: WIDTH, height: HEIGHT, lastView: mainView)
+            }
         }
         mainView.layoutIfNeeded()
+    }
+    
+
+    func callAlert()
+    {
+        var textField = UITextField()
+        let alert = UIAlertController(title: "Incorrect amount", message: "", preferredStyle: .alert)
+      
+        let submitButton = UIAlertAction(title: "submit", style: .default) { (action) in
+            if textField.text != nil && Int(textField.text!) != nil && Int(textField.text!)! <= self.maxAmountOfViews!{
+                let count = Int(textField.text!)
+                self.generateViewsToMainView(count: count!, x: 0.0, y: 0.0, widht: self.WIDTH, height: self.HEIGHT, lastView: self.mainView)
+            }
+        }
+        alert.addTextField { (alertTextField) in
+            textField = alertTextField
+        }
+        alert.addAction(submitButton)
+        self.recievingAmountOfViewsTextField.text = ""
+        present(alert,animated: true,completion:  nil)
+        
     }
     
     func recieveTap(ID:Int) {
         deleteViewById(view: mainView.subviews[0] as! CustomView, ID: ID)
     }
+    
     
     func deleteViewById(view:CustomView,ID:Int){
         if view.ID! == ID{
@@ -58,6 +93,7 @@ class ViewController: UIViewController, CustomViewProtocol {
         }
     }
     
+    
     func generateViewsToMainView(count: Int,x:Double,y:Double,widht:Double,height:Double,lastView:UIView){
         var counter: Int = count
         if counter == 0 {
@@ -70,10 +106,13 @@ class ViewController: UIViewController, CustomViewProtocol {
             generateViewsToMainView(count: counter, x: OFFSET , y: OFFSET, widht: widht, height: height, lastView:currView)
         }
     }
+    
     func cleanMainView(){
         if !mainView.subviews.isEmpty{
             mainView.subviews[0].removeFromSuperview()
         }
     }
+    
+    
 }
 
