@@ -9,7 +9,7 @@
 import UIKit
 
 protocol  CustomViewProtocol {
-    func recieveTap()
+    func recieveTap(ID:Int)
 }
 
 class ViewController: UIViewController, CustomViewProtocol {
@@ -40,10 +40,23 @@ class ViewController: UIViewController, CustomViewProtocol {
         mainView.layoutIfNeeded()
     }
     
-    func recieveTap() {
-        
+    func recieveTap(ID:Int) {
+        deleteViewById(view: mainView.subviews[0] as! CustomView, ID: ID)
     }
     
+    func deleteViewById(view:CustomView,ID:Int){
+        if view.ID! == ID{
+            if !view.subviews.isEmpty{
+                if view.superview != mainView{
+                    let temp = view.subviews[0] as! CustomView
+                    view.superview?.insertSubview(temp, aboveSubview: view.superview!)
+                }
+            }
+            view.removeFromSuperview()
+        }else{
+            deleteViewById(view: view.subviews[0] as! CustomView, ID: ID)
+        }
+    }
     
     func generateViewsToMainView(count: Int,x:Double,y:Double,widht:Double,height:Double,lastView:UIView){
         var counter: Int = count
@@ -51,6 +64,7 @@ class ViewController: UIViewController, CustomViewProtocol {
         } else if counter > 0{
             counter -= 1
             let currView = CustomView(frame: CGRect(x: x, y:y, width:widht, height: height))
+            currView.setId(id: count)
             lastView.insertSubview(currView, aboveSubview: lastView)
             currView.retriever = self
             generateViewsToMainView(count: counter, x: OFFSET , y: OFFSET, widht: widht, height: height, lastView:currView)
