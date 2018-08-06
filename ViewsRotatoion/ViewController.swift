@@ -8,21 +8,22 @@
 
 import UIKit
 
+
 protocol  CustomViewDelegate {
-    func recieveTap(ID:Int)
+    func viewTapped(sender:UITapGestureRecognizer)
 }
 
-class ViewController: UIViewController, CustomViewDelegate {
+class ViewController: UIViewController{
 
-  
+    let OFFSET = 1.0
+    let WIDTH = 80.0
+    let HEIGHT = 120.0
+    
     @IBOutlet weak var recievingAmountOfViewsTextField: UITextField!
     
     @IBOutlet weak var mainView: UIView!
     
-    let OFFSET = 10.0
-    let WIDTH = 80.0
-    let HEIGHT = 120.0
-    
+ 
     var maxAmountOfViews:Int?
     
     public var screenWidth: CGFloat {
@@ -52,7 +53,7 @@ class ViewController: UIViewController, CustomViewDelegate {
             if amountOfViews > maxAmountOfViews!{
               callAlert()
             }else{
-                 generateViewsToMainView(viewsAmount: amountOfViews, x: 0.0, y: 0.0, widht: WIDTH, height: HEIGHT, toView: mainView)
+                 generateViewsToMainView(viewsAmount: amountOfViews, toView: mainView)
             }
         }else{
             callAlert()
@@ -69,7 +70,7 @@ class ViewController: UIViewController, CustomViewDelegate {
         let submitButton = UIAlertAction(title: "submit", style: .default) { (action) in
             if textField.text != nil && Int(textField.text!) != nil && Int(textField.text!)! <= self.maxAmountOfViews!{
                 let viewsAmount = Int(textField.text!)
-                self.generateViewsToMainView( viewsAmount:  viewsAmount!, x: 0.0, y: 0.0, widht: self.WIDTH, height: self.HEIGHT, toView: self.mainView)
+                self.generateViewsToMainView( viewsAmount:  viewsAmount!, toView: self.mainView)
             }else{
             self.callAlert()
             }
@@ -87,37 +88,40 @@ class ViewController: UIViewController, CustomViewDelegate {
         
     }
     
-    func recieveTap(ID:Int) {
-        deleteViewById(view: mainView.subviews[0] as! CustomView, ID: ID)
-    }
+  
     
     
-    func deleteViewById(view:CustomView,ID:Int){
-        if view.ID! == ID{
+    func deleteView(view:UIView){
+        
             if !view.subviews.isEmpty{
                 let temp = view.subviews[0] as! CustomView
-                if view.superview == mainView{
-                    temp.frame = CGRect(x: 0.0, y: 0.0, width: temp.frame.width, height: temp.frame.height)
-                }
+                let customView = view as! CustomView
+                temp.viewConstrains = customView.viewConstrains
+                NSLayoutConstraint.activate(temp.viewConstrains)
                 view.superview?.insertSubview(temp, aboveSubview: view.superview!)
                 
             }
+            updateViewConstraints()
             view.removeFromSuperview()
-        }else{
-            deleteViewById(view: view.subviews[0] as! CustomView, ID: ID)
-        }
     }
     
     
-    func generateViewsToMainView(viewsAmount: Int,x:Double,y:Double,widht:Double,height:Double,toView:UIView){
-        if viewsAmount == 0 {
-        } else if viewsAmount > 0{
+    func generateViewsToMainView(viewsAmount: Int, toView:UIView){
+        struct Handler{
+            static var number = 0
+        }
+        
+        
+        if viewsAmount == Handler.number {
+            Handler.number = 0
+        } else if viewsAmount > Handler.number{
    
-            let currView = CustomView(frame: CGRect(x: x, y:y, width:widht, height: height))
-            currView.setId(id: viewsAmount - 1)
+            let currView = CustomView()
             toView.insertSubview(currView, aboveSubview: toView)
-            currView.retriever = self
-            generateViewsToMainView( viewsAmount: viewsAmount - 1, x: OFFSET , y: OFFSET, widht: widht, height: height, toView:currView)
+            currView.setConstrains(to: mainView, numberOfView: Handler.number)
+            currView.delegate = self
+            Handler.number += 1
+            generateViewsToMainView( viewsAmount: viewsAmount, toView:currView)
         }
     }
     
@@ -127,6 +131,14 @@ class ViewController: UIViewController, CustomViewDelegate {
         }
     }
     
+    
+}
+
+extension ViewController: CustomViewDelegate{
+   
+    func viewTapped(sender:UITapGestureRecognizer){
+        deleteView(view: sender.view!)
+    }
     
 }
 
